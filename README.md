@@ -11,13 +11,3 @@ This project is a simple authentication form built with React, featuring login, 
 - **Toast Notifications**: Provides user feedback for successful or failed actions.
 - **Responsive Design**: The form is styled using Bootstrap and custom CSS for a modern look.
 
-## Installation
-
-To run the project locally, follow these steps:
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/your-username/loginform.git
-cd loginform
-
