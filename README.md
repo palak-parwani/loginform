@@ -1,13 +1,44 @@
-# React Login Form with Registration and Password Reset
+# 🔐 React Auth App with Google Login, Registration & Password Reset
 
-This project is a simple authentication form built with React, featuring login, registration, and password reset functionality. It connects to a local JSON server to handle user data. It uses React hooks for state management and React Toastify for notifications.
+This is a full-featured authentication UI built with **React**, styled using **Bootstrap**, and powered by a **local JSON server** as the backend. It supports:
 
-## Features
+- 🔑 Login with email & password
+- 🆕 User registration with validation
+- 🔄 Password reset functionality
+- 🔐 Google OAuth login (via `@react-oauth/google`)
+- 💅 Glassmorphism UI design
 
-- **Login**: Allows users to log in with their email and password.
-- **Register**: New users can create an account by providing an email, password, and confirming the password.
-- **Password Reset**: Users can reset their password by entering a new password and confirming it.
-- **Input Validation**: Ensures that all fields are filled in and passwords match.
-- **Toast Notifications**: Provides user feedback for successful or failed actions.
-- **Responsive Design**: The form is styled using Bootstrap and custom CSS for a modern look.
+---
+
+## 🚀 Features
+
+- 🔒 **Login** – Authenticate existing users.
+- 📝 **Register** – Create new accounts with email & password.
+- 🔁 **Reset Password** – Reset forgotten passwords securely.
+- 🌐 **Google Sign-In** – One-click login/signup using Google OAuth.
+- 🛡️ **Validation** – Frontend email & password validation.
+- 🌈 **Styling** – Modern, glassmorphism-based responsive UI with Bootstrap 5.
+- 🗃️ **Backend** – Uses `JSON Server` (`http://localhost:3001/users`) as a mock database.
+
+---
+
+## 📦 Tech Stack
+
+- React
+- Bootstrap 5
+- React Icons
+- Google OAuth (`@react-oauth/google`)
+- Toast Notifications (`react-toastify`)
+- JSON Server (for mock backend)
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/palak-parwani/loginform.git
+cd my-app
+
 
