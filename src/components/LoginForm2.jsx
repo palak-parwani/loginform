@@ -1,175 +1,135 @@
 import React, { useState } from "react";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./LoginForm2.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const LoginForm2 = () => {
-  // State to manage the current form view
   const [isRegistering, setIsRegistering] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [flipTrigger, setFlipTrigger] = useState(false);
-
-  // Input fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Helper: Validate email format
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Helper: Validate password strength
-  const isValidPassword = (password) => {
-    return password.length >= 6;
-  };
-
-  // Handle form flipping (login <-> register)
   const toggleForm = () => {
-    setFlipTrigger(true);
-    setTimeout(() => {
-      
-      setIsRegistering(!isRegistering);
-      setIsResetting(false);
-      setFlipTrigger(false);
-    }, 500);
+    setIsRegistering(!isRegistering);
+    setIsResetting(false);
   };
 
-  // Handle password reset view toggle
   const toggleReset = () => {
-    setFlipTrigger(true);
-    setTimeout(() => {
-      setIsResetting(!isResetting);
-      setIsRegistering(false);
-      setFlipTrigger(false);
-    }, 500);
+    setIsResetting(!isResetting);
+    setIsRegistering(false);
   };
 
-  // LOGIN handler
-  const handleLogin = async () => {
-    if (!email || !password) {
-      return toast.error("Please enter both email and password.");
-    }
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPassword = (password) => password.length >= 6;
 
-    if (!isValidEmail(email)) {
-      return toast.error("Please enter a valid email address.");
-    }
+  const handleLogin = async () => {
+    if (!email || !password) return toast.error("Enter email and password.");
+    if (!isValidEmail(email)) return toast.error("Invalid email format.");
 
     try {
       const res = await fetch(`http://localhost:3001/users?email=${email}`);
       const users = await res.json();
-
-      if (users.length === 0) {
-        return toast.error("No user found with this email.");
-      }
-
-      const user = users[0];
-      if (user.password !== password) {
-        return toast.error("Incorrect password.");
-      }
+      if (users.length === 0) return toast.error("User not found.");
+      if (users[0].password !== password) return toast.error("Wrong password.");
 
       toast.success("Login successful!");
     } catch (err) {
       console.error(err);
-      toast.error("Login failed. Please try again.");
+      toast.error("Login failed.");
     }
   };
 
-  // REGISTER handler
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
-      return toast.error("Please fill in all fields.");
-    }
-
-    if (!isValidEmail(email)) {
-      return toast.error("Please enter a valid email address.");
-    }
-
-    if (!isValidPassword(password)) {
+    if (!email || !password || !confirmPassword)
+      return toast.error("Fill all fields.");
+    if (!isValidEmail(email)) return toast.error("Invalid email.");
+    if (!isValidPassword(password))
       return toast.error("Password must be at least 6 characters.");
-    }
-
-    if (password !== confirmPassword) {
+    if (password !== confirmPassword)
       return toast.error("Passwords do not match.");
-    }
 
     try {
       const res = await fetch(`http://localhost:3001/users?email=${email}`);
       const users = await res.json();
-
-      if (users.length > 0) {
-        return toast.error("Email already registered.");
-      }
-
-      const newUser = { email, password };
+      if (users.length > 0) return toast.error("Email already registered.");
 
       await fetch("http://localhost:3001/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify({ email, password }),
       });
 
-      toast.success("Registration successful! You can now login.");
+      toast.success("Registered successfully!");
       setIsRegistering(false);
     } catch (err) {
       console.error(err);
-      toast.error("Registration failed. Please try again.");
+      toast.error("Registration failed.");
     }
   };
 
-  // PASSWORD RESET handler
   const handleResetPassword = async () => {
-    if (!email) {
-      return toast.error("Please enter your email.");
-    }
-
-    if (!isValidEmail(email)) {
-      return toast.error("Please enter a valid email address.");
-    }
-
-    if (!password || !confirmPassword) {
-      return toast.error("Please enter both password fields.");
-    }
-
-    if (!isValidPassword(password)) {
+    if (!email) return toast.error("Enter your email.");
+    if (!isValidEmail(email)) return toast.error("Invalid email.");
+    if (!password || !confirmPassword)
+      return toast.error("Enter new password twice.");
+    if (!isValidPassword(password))
       return toast.error("Password must be at least 6 characters.");
-    }
-
-    if (password !== confirmPassword) {
+    if (password !== confirmPassword)
       return toast.error("Passwords do not match.");
-    }
 
     try {
       const res = await fetch(`http://localhost:3001/users?email=${email}`);
       const users = await res.json();
-
-      if (users.length === 0) {
-        return toast.error("Email not found.");
-      }
+      if (users.length === 0) return toast.error("Email not found.");
 
       const user = users[0];
-
       await fetch(`http://localhost:3001/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
 
-      toast.success("Password reset successfully.");
+      toast.success("Password reset successful.");
       setIsResetting(false);
     } catch (err) {
       console.error(err);
-      toast.error("Password reset failed. Try again.");
+      toast.error("Password reset failed.");
     }
   };
 
-  // Unified SUBMIT handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      const email = decoded.email;
+
+      const res = await fetch(`http://localhost:3001/users?email=${email}`);
+      const users = await res.json();
+
+      if (users.length === 0) {
+        // New user - register
+        await fetch("http://localhost:3001/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password: "" }),
+        });
+        toast.success("Google sign-up successful!");
+      } else {
+        // Existing user - login
+        toast.success("Google login successful!");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Google login failed.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (isRegistering) {
       await handleRegister();
     } else if (isResetting) {
@@ -177,8 +137,6 @@ const LoginForm2 = () => {
     } else {
       await handleLogin();
     }
-
-    // Clear sensitive fields after use
     setPassword("");
     setConfirmPassword("");
   };
@@ -189,14 +147,13 @@ const LoginForm2 = () => {
       style={{
         backgroundImage: `url('https://user-images.githubusercontent.com/13468728/233847739-219cb494-c265-4554-820a-bd3424c59065.jpg')`,
         backgroundSize: "cover",
-        backgroundPosition: "center",
         minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <div className={`auth-box glass-box ${flipTrigger ? "flipped" : ""}`}>
+      <div className="auth-box glass-box">
         <h2 className="text-center mb-4 text-white fw-bold">
           {isResetting
             ? "Reset Password"
@@ -205,7 +162,6 @@ const LoginForm2 = () => {
             : "Login"}
         </h2>
 
-        {/* AUTH FORM */}
         <form onSubmit={handleSubmit}>
           {/* Email Field */}
           <div className="mb-4 d-flex align-items-center bg-input">
@@ -219,7 +175,7 @@ const LoginForm2 = () => {
             />
           </div>
 
-          {/* Password Field - hidden during reset confirm */}
+          {/* Password Field */}
           {!isResetting && (
             <div className="mb-4 d-flex align-items-center bg-input">
               <FaLock className="me-2 text-white" />
@@ -233,8 +189,8 @@ const LoginForm2 = () => {
             </div>
           )}
 
-          {/* Confirm Password Field for Register */}
-          {isRegistering && (
+          {/* Confirm Password for Register/Reset */}
+          {(isRegistering || isResetting) && (
             <div className="mb-4 d-flex align-items-center bg-input">
               <FaLock className="me-2 text-white" />
               <input
@@ -247,33 +203,22 @@ const LoginForm2 = () => {
             </div>
           )}
 
-          {/* Reset Password Fields */}
-          {isResetting && (
-            <>
-              <div className="mb-4 d-flex align-items-center bg-input">
-                <FaLock className="me-2 text-white" />
-                <input
-                  type="password"
-                  className="form-control bg-transparent border-0 text-white"
-                  placeholder="New Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="mb-4 d-flex align-items-center bg-input">
-                <FaLock className="me-2 text-white" />
-                <input
-                  type="password"
-                  className="form-control bg-transparent border-0 text-white"
-                  placeholder="Confirm New Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-            </>
+          {/* Google Sign-in */}
+          {!isResetting && (
+            <div className="mb-4 text-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error("Google Sign In Failed")}
+                theme="outline"
+                shape="rectangular"
+                text={isRegistering ? "signup_with" : "signin_with"}
+                size="large"
+                useOneTap={false}
+              />
+            </div>
           )}
 
-          {/* Remember Me & Forgot Password (login only) */}
+          {/* Remember/Forgot (login only) */}
           {!isRegistering && !isResetting && (
             <div className="mb-4 form-check text-start d-flex flex-row justify-content-between">
               <div>
@@ -289,15 +234,13 @@ const LoginForm2 = () => {
                   Remember Me
                 </label>
               </div>
-              <div className="forgetPass">
-                <span
-                  className="ms-2 text-white small"
-                  role="button"
-                  onClick={toggleReset}
-                >
-                  Forgot Password
-                </span>
-              </div>
+              <span
+                className="ms-2 text-white small"
+                role="button"
+                onClick={toggleReset}
+              >
+                Forgot Password?
+              </span>
             </div>
           )}
 
@@ -313,8 +256,8 @@ const LoginForm2 = () => {
               : "Log In"}
           </button>
 
-          {/* Form Toggle Text */}
-          <p className="text-center text-white text-decoration-none mb-1">
+          {/* Toggle Form */}
+          <p className="text-center text-white">
             {isResetting ? (
               <>
                 Back to{" "}
@@ -342,10 +285,8 @@ const LoginForm2 = () => {
             )}
           </p>
         </form>
+        <ToastContainer position="top-center" autoClose={3000} theme="dark" />
       </div>
-
-      {/* Toast Notifications */}
-      <ToastContainer position="top-center" autoClose={3000} theme="dark" />
     </div>
   );
 };
