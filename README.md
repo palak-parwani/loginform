@@ -42,3 +42,14 @@ git clone https://github.com/palak-parwani/loginform.git
 cd my-app
 
 
+##🔑 Google OAuth Setup
+You must have a Google OAuth Client ID. Use this in your project where required.
+
+Go to Google Developer Console
+
+Create a new OAuth 2.0 Web App client
+
+Add http://localhost:3000 to the authorized origin
+
+Add the client ID in your code where you render <GoogleLogin />
+
