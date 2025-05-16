@@ -32,3 +32,18 @@ This is a full-featured authentication UI built with **React**, styled using **B
 - JSON Server (for mock backend)
 
 ---
+
+
+## 🖼️ Screenshots
+
+### 🔐 Login Page
+![Login Page](./screenshots/login page.png)
+
+### 📝 Register Page
+![Register Page](./screenshots/register page.png)
+
+### 🔄 Reset Password Page
+![Reset Password Page](./screenshots/forget password.png)
+
+### 🔄 Login in with google
+![Login with google Page](./screenshots/login with google then button chnge.png)
